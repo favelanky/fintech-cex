@@ -76,25 +76,19 @@ def register():
         password = data.get('password')
 
         if not email or not password:
-            logger.warning("Email or password missing in request")
             return jsonify({'error': 'Email and password are required'}), 400
 
-        # Проверка, зарегистрирован ли пользователь
         if User.query.filter_by(email=email).first():
-            logger.info(f"Email {email} is already registered")
             return jsonify({'error': 'Email is already registered'}), 400
-
-        # Хэширование пароля и создание пользователя
+        
         hashed_password = User.hash_password(password)
         new_user = User(email=email, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
 
-        logger.info(f"User {email} registered successfully")
         return jsonify({'message': 'User registered successfully'}), 201
 
     except Exception as e:
-        logger.error(f"Error during registration: {str(e)}")
         return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/api/auth/login', methods=['POST'])
@@ -105,22 +99,16 @@ def login():
         password = data.get('password')
 
         if not email or not password:
-            logger.warning("Email or password missing in request")
             return jsonify({'error': 'Email and password are required'}), 400
 
-        # Поиск пользователя в базе данных
         user = User.query.filter_by(email=email).first()
         if not user or not User.check_password(user.password, password):
-            logger.warning(f"Invalid login attempt for email: {email}")
             return jsonify({'error': 'Invalid credentials'}), 401
 
-        # Генерация JWT токена
         access_token = create_access_token(identity=user.id)
-        logger.info(f"User {email} logged in successfully")
         return jsonify({'token': access_token}), 200
 
     except Exception as e:
-        logger.error(f"Error during login: {str(e)}")
         return jsonify({'error': 'Internal server error'}), 500
     
 @app.route('/api/wallet', methods=['GET'])
@@ -468,7 +456,6 @@ def get_leaderboard():
         return jsonify(result), 200
 
     except Exception as e:
-        logger.error(f"Error getting leaderboard: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
 @app.route('/api/user/profile', methods=['GET'])
